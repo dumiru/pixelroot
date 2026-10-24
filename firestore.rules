@@ -1,0 +1,361 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function hasProfile() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // Role comes from the user's own profile. Clients cannot change it (see users rules).
+    // Suspended accounts (disabled == true) get no role, so every role-based rule denies them.
+    function myRole() {
+      return signedIn() && hasProfile()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('disabled', false) != true
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : '';
+    }
+
+    function isAdmin()    { return myRole() == 'admin'; }
+    function isDesigner() { return myRole() == 'designer'; }
+    function isClient()   { return myRole() == 'client'; }
+
+    function strOk(v, max) { return v is string && v.size() <= max; }
+
+    // Optional string field: fine when absent, otherwise must be a string within the limit.
+    function optStr(d, k, max) { return !(k in d) || strOk(d[k], max); }
+
+    // The signed-in user's own profile (used to stop clients from faking names, limits or designers).
+    function myProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // A client may only attach records to the designer an admin assigned to them (or none).
+    function myDesignerOrNull() { return myProfile().get('assignedDesignerId', null); }
+
+    // Empty, or an http(s) link. Blocks javascript:, data: and every other scheme.
+    function linkOk(v) {
+      return v == '' || (v is string && v.matches('(?i)^https?://[^ ]+$'));
+    }
+
+    function designerExists(id) {
+      return get(/databases/$(database)/documents/users/$(id)).data.role == 'designer';
+    }
+
+    // True when the client with this id is assigned to the signed-in designer.
+    function isAssignedToMe(clientId) {
+      return get(/databases/$(database)/documents/users/$(clientId)).data.assignedDesignerId == request.auth.uid;
+    }
+
+    // Only the listed fields changed on an update.
+    function changed(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    // ---------- users ----------
+    match /users/{userId} {
+      // Own profile, admins, and (for clients) only their own assigned designer.
+      allow get: if request.auth.uid == userId
+        || isAdmin()
+        || (isClient() && resource.data.role == 'designer' && myDesignerOrNull() == userId);
+
+      // Designers may list only the clients assigned to them. Admins may list everyone.
+      allow list: if isAdmin()
+        || (isDesigner() && resource.data.assignedDesignerId == request.auth.uid);
+
+      // Self sign-up as a client only. Admins create staff and client accounts via the dashboard.
+      allow create: if isAdmin()
+        || (request.auth.uid == userId
+            && request.resource.data.keys().hasOnly(['uid','name','email','role','plan','createdAt','assignedDesignerId'])
+            && request.resource.data.uid == userId
+            && request.resource.data.role == 'client'
+            && request.resource.data.plan in ['starter','growth','pro']
+            && request.resource.data.assignedDesignerId == null
+            && request.resource.data.createdAt == request.time
+            && request.resource.data.email.lower() == request.auth.token.email.lower()
+            && strOk(request.resource.data.name, 120));
+
+      // Users may edit their own name/phone only. Email changes and password resets go through
+      // the admin. They can never change role, balance, brief limits, designer assignment or
+      // cycle dates. Only admins can do that.
+      allow update: if isAdmin()
+        || (request.auth.uid == userId
+            && request.resource.data.role == resource.data.role
+            && changed(['name','phone'])
+            && optStr(request.resource.data, 'name', 120)
+            && optStr(request.resource.data, 'phone', 30));
+
+      allow delete: if isAdmin();
+    }
+
+    // ---------- briefs ----------
+    match /briefs/{briefId} {
+      allow read: if isAdmin()
+        || (isDesigner() && resource.data.designerId == request.auth.uid)
+        || (isClient() && resource.data.clientId == request.auth.uid);
+
+      allow create: if isAdmin()
+        || (isClient()
+            // Only the fields the client form sends. No extra or hidden fields.
+            && request.resource.data.keys().hasOnly(['clientId','clientName','clientEmail','designerId','title','platform','format','description','deadline','status','accepted','workLink','milestones','revisionLimit','revisionsUsed','createdAt'])
+            && request.resource.data.clientId == request.auth.uid
+            && request.resource.data.clientName == myProfile().name
+            && request.resource.data.clientEmail == myProfile().email
+            && request.resource.data.designerId == myDesignerOrNull()
+            // The revision limit comes from the admin-set profile value, never from the client.
+            && request.resource.data.revisionLimit == myProfile().get('revisionsPerBrief', 2)
+            && request.resource.data.status == 'pending'
+            && request.resource.data.accepted == false
+            && request.resource.data.workLink == ''
+            && request.resource.data.milestones == []
+            && request.resource.data.revisionsUsed == 0
+            && request.resource.data.createdAt == request.time
+            && strOk(request.resource.data.title, 120)
+            && strOk(request.resource.data.description, 3000)
+            && optStr(request.resource.data, 'platform', 60)
+            && optStr(request.resource.data, 'format', 60)
+            && optStr(request.resource.data, 'deadline', 40));
+
+      allow update: if isAdmin()
+        // Designer: only their own briefs, only progress/acceptance/delivery fields.
+        || (isDesigner()
+            && resource.data.designerId == request.auth.uid
+            && request.resource.data.designerId == request.auth.uid
+            && changed(['status','workLink','accepted','acceptedAt','completedAt','milestones'])
+            && linkOk(request.resource.data.get('workLink', '')))
+        // Client: edit details while not accepted, or request a revision within the limit.
+        || (isClient()
+            && resource.data.clientId == request.auth.uid
+            && ((resource.data.accepted == false
+                  && changed(['title','platform','format','description','deadline'])
+                  && strOk(request.resource.data.title, 120)
+                  && strOk(request.resource.data.description, 3000)
+                  && optStr(request.resource.data, 'platform', 60)
+                  && optStr(request.resource.data, 'format', 60)
+                  && optStr(request.resource.data, 'deadline', 40))
+                || (request.resource.data.status == 'revision'
+                  && changed(['status','revisionNote','revisionExtraNote','revisionFeedback','revisionsUsed'])
+                  && request.resource.data.revisionsUsed == resource.data.revisionsUsed + 1
+                  && request.resource.data.revisionsUsed <= resource.data.get('revisionLimit', 2)
+                  && optStr(request.resource.data, 'revisionNote', 2000)
+                  && optStr(request.resource.data, 'revisionExtraNote', 2000)
+                  && optStr(request.resource.data, 'revisionFeedback', 2000))));
+
+      allow delete: if isAdmin()
+        || (isClient() && resource.data.clientId == request.auth.uid && resource.data.accepted == false);
+    }
+
+    // ---------- meetings ----------
+    function meetingShapeOk() {
+      return request.resource.data.keys().hasOnly(['clientId','clientName','designerId','designerName','title','when','link','notes','status','createdBy','createdByRole','createdAt'])
+        && request.resource.data.createdAt == request.time
+        && optStr(request.resource.data, 'clientName', 120)
+        && optStr(request.resource.data, 'designerName', 120)
+        && optStr(request.resource.data, 'when', 40)
+        && optStr(request.resource.data, 'link', 500)
+        && optStr(request.resource.data, 'notes', 1000);
+    }
+
+    match /meetings/{meetingId} {
+      allow read: if isAdmin()
+        || (isClient() && resource.data.clientId == request.auth.uid)
+        || (isDesigner() && resource.data.designerId == request.auth.uid);
+
+      allow create: if isAdmin()
+        || (isClient()
+            && request.resource.data.clientId == request.auth.uid
+            && request.resource.data.createdBy == request.auth.uid
+            && request.resource.data.createdByRole == 'client'
+            && request.resource.data.status == 'scheduled'
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.assignedDesignerId == request.resource.data.designerId
+            && linkOk(request.resource.data.get('link', ''))
+            && meetingShapeOk()
+            && strOk(request.resource.data.title, 120))
+        || (isDesigner()
+            && request.resource.data.designerId == request.auth.uid
+            && request.resource.data.createdBy == request.auth.uid
+            && request.resource.data.createdByRole == 'designer'
+            && request.resource.data.status == 'scheduled'
+            && isAssignedToMe(request.resource.data.clientId)
+            && linkOk(request.resource.data.get('link', ''))
+            && meetingShapeOk()
+            && strOk(request.resource.data.title, 120));
+
+      // Clients and designers can only cancel a meeting, nothing else.
+      allow update: if isAdmin()
+        || (((isClient() && resource.data.clientId == request.auth.uid)
+             || (isDesigner() && resource.data.designerId == request.auth.uid))
+            && changed(['status'])
+            && request.resource.data.status == 'cancelled');
+
+      allow delete: if isAdmin();
+    }
+
+    // ---------- notes ----------
+    function noteShapeOk() {
+      return request.resource.data.keys().hasOnly(['clientId','clientName','designerId','designerName','authorId','authorRole','authorName','text','category','briefId','briefTitle','createdAt'])
+        && request.resource.data.createdAt == request.time
+        && optStr(request.resource.data, 'clientName', 120)
+        && optStr(request.resource.data, 'designerName', 120)
+        && optStr(request.resource.data, 'authorName', 120)
+        && optStr(request.resource.data, 'category', 40)
+        && (request.resource.data.get('briefId', null) == null || strOk(request.resource.data.briefId, 100))
+        && (request.resource.data.get('briefTitle', null) == null || strOk(request.resource.data.briefTitle, 200));
+    }
+
+    match /notes/{noteId} {
+      allow read: if isAdmin()
+        || (isClient() && resource.data.clientId == request.auth.uid)
+        || (isDesigner() && resource.data.designerId == request.auth.uid);
+
+      allow create: if isAdmin()
+        || (isClient()
+            && request.resource.data.clientId == request.auth.uid
+            && request.resource.data.authorId == request.auth.uid
+            && request.resource.data.authorRole == 'client'
+            && request.resource.data.designerId == myDesignerOrNull()
+            && noteShapeOk()
+            && strOk(request.resource.data.text, 2000))
+        || (isDesigner()
+            && request.resource.data.designerId == request.auth.uid
+            && request.resource.data.authorId == request.auth.uid
+            && request.resource.data.authorRole == 'designer'
+            && isAssignedToMe(request.resource.data.clientId)
+            && noteShapeOk()
+            && strOk(request.resource.data.text, 2000));
+
+      // Authors can edit or delete their own notes.
+      allow update: if isAdmin()
+        || ((isClient() || isDesigner())
+            && resource.data.authorId == request.auth.uid
+            && changed(['text','category','editedAt'])
+            && optStr(request.resource.data, 'category', 40)
+            && strOk(request.resource.data.text, 2000));
+
+      allow delete: if isAdmin()
+        || ((isClient() || isDesigner()) && resource.data.authorId == request.auth.uid);
+    }
+
+    // ---------- notifications ----------
+    match /notifications/{notifId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+
+      // Anyone signed in may notify ADMIN only (client/designer support messages).
+      // Admins may send notifications to any user.
+      allow create: if isAdmin()
+        || (signedIn()
+            && request.resource.data.keys().hasOnly(['userId','role','title','body','read','createdAt'])
+            && request.resource.data.createdAt == request.time
+            && request.resource.data.userId == 'admin'
+            && request.resource.data.role == 'admin'
+            && request.resource.data.read == false
+            && strOk(request.resource.data.title, 120)
+            && strOk(request.resource.data.body, 300));
+
+      // Recipients may only mark their own notifications as read.
+      allow update: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid && changed(['read']));
+
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // ---------- support requests ----------
+    match /supportRequests/{id} {
+      allow read: if isAdmin()
+        || (isClient() && resource.data.clientId == request.auth.uid)
+        || (isDesigner() && resource.data.designerId == request.auth.uid);
+
+      allow create: if (isClient()
+            && request.resource.data.keys().hasOnly(['clientId','clientName','clientEmail','designerId','designerName','type','message','status','createdAt'])
+            && request.resource.data.createdAt == request.time
+            && request.resource.data.clientId == request.auth.uid
+            && request.resource.data.designerId == myDesignerOrNull()
+            && optStr(request.resource.data, 'clientName', 120)
+            && optStr(request.resource.data, 'clientEmail', 254)
+            && optStr(request.resource.data, 'designerName', 120)
+            && request.resource.data.status == 'open'
+            && request.resource.data.type in ['request_designer','report_problem']
+            && strOk(request.resource.data.message, 2000))
+        || (isDesigner()
+            && request.resource.data.keys().hasOnly(['designerId','designerName','designerEmail','type','fromRole','message','status','createdAt'])
+            && request.resource.data.createdAt == request.time
+            && request.resource.data.designerId == request.auth.uid
+            && optStr(request.resource.data, 'designerName', 120)
+            && optStr(request.resource.data, 'designerEmail', 254)
+            && optStr(request.resource.data, 'fromRole', 20)
+            && request.resource.data.status == 'open'
+            && request.resource.data.type == 'report_problem'
+            && strOk(request.resource.data.message, 2000));
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ---------- admin-only collections ----------
+    match /payments/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /tasks/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // ---------- public forms (no sign-in needed), validated and admin-readable only ----------
+    match /contactMessages/{id} {
+      allow create: if isAdmin() || request.resource.data.keys().hasOnly(['name','email','phone','message','status','createdAt'])
+        && strOk(request.resource.data.name, 100)
+        && strOk(request.resource.data.email, 254)
+        && request.resource.data.email.matches('^[^ @]+@[^ @]+[.][^ @]+$')
+        && strOk(request.resource.data.phone, 20)
+        && strOk(request.resource.data.message, 1000)
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ---------- ERP collections (admin only) ----------
+    match /invoices/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /expenses/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /timeLogs/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /payroll/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /plans/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /documents/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // Business settings: admin only (invoice numbering, company details).
+    match /settings/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // Audit trail: admins can read and append. Entries cannot be edited or deleted.
+    match /auditLog/{id} {
+      allow read, create: if isAdmin();
+    }
+
+    // ---------- everything else is denied ----------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

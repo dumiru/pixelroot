@@ -1,0 +1,9 @@
+{
+  "name": "PixelRoot",
+  "short_name": "PixelRoot",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#061433",
+  "theme_color": "#0f2b5c",
+  "icons": []
+}

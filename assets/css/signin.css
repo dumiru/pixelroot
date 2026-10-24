@@ -1,0 +1,7 @@
+.box{width:100%;max-width:420px}
+.fp{display:block;margin:-4px 0 12px auto;font-size:12px;font-weight:600;color:var(--blue-600)}
+.fp:hover{text-decoration:underline}
+.mi{width:48px;height:48px;border-radius:var(--r-md);background:var(--blue-50);color:var(--blue-600);display:grid;place-items:center;margin:0 auto 12px}
+.mi svg{width:24px;height:24px}
+.modal p{color:var(--muted);font-size:13px;margin:8px 0 18px;word-break:break-word}
+.modal p a{color:var(--blue-600)}

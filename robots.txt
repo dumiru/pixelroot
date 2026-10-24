@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /signin.html
+Disallow: /signup.html
+Disallow: /client-dashboard.html
+Disallow: /designer-dashboard.html
+Disallow: /admin-dashboard.html
+
+Sitemap: https://pixelroot.site/sitemap.xml

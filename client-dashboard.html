@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en" class="gate">
+<head>
+<style>html.gate body{display:none!important}</style>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' https:; frame-src 'self' https://pixelroot-9da60.firebaseapp.com https://accounts.google.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com wss://*.googleapis.com https://apis.google.com https://pixelroot-9da60.firebaseapp.com; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script src="assets/js/frame-guard.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f2b5c">
+<title>Client Portal | PixelRoot</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/dashboard.css">
+<link rel="stylesheet" href="assets/css/client-dashboard.css">
+<script src="elements.js" defer></script>
+</head>
+<body>
+
+<!-- Desktop sidebar -->
+<aside class="sidebar" aria-label="Sidebar">
+  <div class="brand">Pixel<span>Root</span></div>
+  <div class="side-label">Workspace</div>
+  <nav class="side-nav">
+    <button class="nav-btn on" data-go="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
+      Overview
+    </button>
+    <button class="nav-btn" data-go="briefs">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Briefs
+    </button>
+    <button class="nav-btn" data-go="meet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Meetings
+    </button>
+    <button class="nav-btn" data-go="notes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Notes
+    </button>
+  </nav>
+  <div class="side-new">
+    <button class="btn btn-main full" data-action="newBrief">+ New brief</button>
+  </div>
+  <div class="side-foot" data-action="profile" role="button" tabindex="0">
+    <div class="avatar" id="sideAvatar" style="width:36px;height:36px;font-size:14px">?</div>
+    <div class="meta"><b id="sideName">Client</b><small>View profile</small></div>
+  </div>
+</aside>
+
+<div class="app">
+
+  <header class="top">
+    <div class="brand">Pixel<span>Root</span></div>
+    <div class="top-actions">
+      <button class="icon-btn" data-action="notifs" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <i class="dot" id="notifDot"></i>
+      </button>
+      <button class="avatar" data-action="profile" id="avatarBtn" aria-label="Account">?</button>
+    </div>
+  </header>
+
+  <!-- ============ HOME ============ -->
+  <section class="view on" id="v-home">
+    <div class="page-head">
+      <div class="eyebrow">Client portal</div>
+      <h1 id="hHello">Hi there</h1>
+      <p id="hSummary">Loading your projects…</p>
+    </div>
+
+    <div class="dash">
+      <div class="dcol">
+        <div class="hero">
+          <div class="hero-top">
+            <div>
+              <div class="eyebrow">Balance</div>
+              <div class="amt" id="hBal">LKR 0</div>
+              <div class="pills">
+                <span class="pill" id="hDate"></span>
+                <span class="pill" id="hResetIn"></span>
+              </div>
+            </div>
+            <div class="ring" aria-label="Briefs used this cycle">
+              <svg viewBox="0 0 92 92">
+                <circle cx="46" cy="46" r="38" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="8"/>
+                <circle class="ring-fg" id="ringFg" cx="46" cy="46" r="38" fill="none" stroke="#bcdcff" stroke-width="8"
+                  stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="238.76" transform="rotate(-90 46 46)"/>
+              </svg>
+              <div class="ring-c"><b id="ringNum">0</b><small>left</small></div>
+            </div>
+          </div>
+          <div class="hero-foot" id="hUsed">0 of 10 briefs used this cycle</div>
+        </div>
+
+        <div class="quick">
+          <button class="qa primary" data-action="newBrief">
+            <span class="qi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+            New brief
+          </button>
+          <button class="qa" data-action="newMeeting">
+            <span class="qi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+            Schedule
+          </button>
+          <button class="qa" data-go="notes">
+            <span class="qi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+            Add note
+          </button>
+        </div>
+
+        <div class="sec"><h2>Up next</h2><button class="link" data-go="briefs">All briefs</button></div>
+        <div id="focus"></div>
+
+        <div class="sec"><h2>Active briefs</h2></div>
+        <div class="rail" id="rail"></div>
+
+        <div class="sec"><h2>Latest notes</h2><button class="link" data-go="notes">View all</button></div>
+        <div id="notesHome"></div>
+      </div>
+
+      <aside class="dcol side">
+        <div class="sec" style="margin-top:0"><h2>Next meeting</h2><button class="link" data-go="meet">Calendar</button></div>
+        <div id="nextMeet"></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ BRIEFS ============ -->
+  <section class="view" id="v-briefs">
+    <div class="page-head">
+      <div class="eyebrow">Your projects</div>
+      <h1>Briefs</h1>
+      <p id="briefsSub"></p>
+    </div>
+    <div class="fchips" id="fchips">
+      <button class="fchip on" data-filter="all">All<span data-count="all"></span></button>
+      <button class="fchip" data-filter="active">Active<span data-count="active"></span></button>
+      <button class="fchip" data-filter="revision">Revision<span data-count="revision"></span></button>
+      <button class="fchip" data-filter="done">Done<span data-count="done"></span></button>
+    </div>
+    <div class="stack" id="briefList"></div>
+  </section>
+
+  <!-- ============ MEETINGS ============ -->
+  <section class="view" id="v-meet">
+    <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
+      <div>
+        <div class="eyebrow">Collaboration</div>
+        <h1>Meetings</h1>
+        <p id="meetSub"></p>
+      </div>
+      <button class="btn btn-main" data-action="newMeeting">Schedule a meeting</button>
+    </div>
+    <div id="meetList"></div>
+  </section>
+
+  <!-- ============ NOTES ============ -->
+  <section class="view" id="v-notes">
+    <div class="page-head">
+      <div class="eyebrow">Shared workspace</div>
+      <h1>Notes</h1>
+      <p>Ideas, feedback and references for your designer.</p>
+    </div>
+    <div class="notes-wrap">
+      <div class="composer-col">
+        <div class="composer">
+          <textarea id="nText" maxlength="300" placeholder="Write a note, idea or feedback…"></textarea>
+          <div class="composer-row">
+            <select id="nCat" aria-label="Category">
+              <option value="general">General</option>
+              <option value="feedback">Feedback</option>
+              <option value="idea">Idea</option>
+              <option value="reference">Reference</option>
+              <option value="urgent">Urgent</option>
+            </select>
+            <select id="nBrief" aria-label="Related brief"><option value="">No brief</option></select>
+            <button class="btn btn-main" id="nAdd">Post</button>
+          </div>
+        </div>
+      </div>
+      <div class="notes-col">
+        <div class="sec" style="margin-top:0"><h2>Timeline</h2></div>
+        <div id="noteList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MOBILE BOTTOM NAV ============ -->
+  <nav class="nav" aria-label="Main">
+    <button class="nav-btn on" data-go="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
+      Home
+    </button>
+    <button class="nav-btn" data-go="briefs">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Briefs
+    </button>
+    <div class="fab-wrap">
+      <button class="fab" data-action="newBrief" aria-label="New brief">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <button class="nav-btn" data-go="meet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Meetings
+    </button>
+    <button class="nav-btn" data-go="notes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Notes
+    </button>
+  </nav>
+</div>
+
+<!-- ============ SHEETS / DIALOGS ============ -->
+
+<!-- New / edit brief -->
+<div class="sheet-bg" id="sheetBrief">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3 id="bTitle">New brief</h3>
+    <p class="sub" id="bSub">Tell us what you need designed.</p>
+    <div class="f"><label for="bName">Title</label><input id="bName" maxlength="100" placeholder="e.g. Black Friday sale post"></div>
+    <div class="f"><label>Platform</label><div class="chips" id="pChips"></div></div>
+    <div class="f"><label>Format</label><div class="chips" id="fmtChips"></div></div>
+    <div class="f"><label for="bDesc">Description</label><textarea id="bDesc" placeholder="Message, style, copy and any references."></textarea></div>
+    <div class="f"><label for="bDeadline">Target deadline</label><input id="bDeadline" type="date"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-main" id="bSave">Submit brief</button>
+    </div>
+  </div>
+</div>
+
+<!-- Brief detail -->
+<div class="sheet-bg" id="sheetDetail">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <h3 id="dTitle" style="font-size:18px;line-height:1.3">Brief</h3>
+      <span id="dStatus"></span>
+    </div>
+    <div id="dBody" style="margin-top:12px"></div>
+    <div class="detail-actions" id="dActions"></div>
+    <button class="btn btn-ghost full" data-close style="margin-top:8px">Close</button>
+  </div>
+</div>
+
+<!-- Revision -->
+<div class="sheet-bg" id="sheetRev">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>Request a revision</h3>
+    <p class="sub" id="revRemain">Let your designer know what needs to change.</p>
+    <div class="f"><label for="revNote">Revision note</label><textarea id="revNote" placeholder="e.g. Make the headline navy and the logo larger."></textarea></div>
+    <div class="f"><label for="revExtra">Additional notes (optional)</label><textarea id="revExtra" style="min-height:70px" placeholder="Extra context, references or deadlines."></textarea></div>
+    <div class="f"><label for="revFb">Overall feedback (optional)</label><textarea id="revFb" style="min-height:70px" placeholder="Your thoughts on the work so far."></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-main" id="revOk">Send revision</button>
+    </div>
+  </div>
+</div>
+
+<!-- Meeting -->
+<div class="sheet-bg" id="sheetMeet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>Schedule a meeting</h3>
+    <p class="sub" id="mWith">With your assigned designer</p>
+    <div class="f"><label for="mTitleIn">Title</label><input id="mTitleIn" maxlength="80" placeholder="e.g. Monthly planning call"></div>
+    <div class="f"><label for="mWhen">Date &amp; time</label><input id="mWhen" type="datetime-local"></div>
+    <div class="f"><label for="mLink">Meeting link (optional)</label><input id="mLink" type="url" placeholder="https://meet.google.com/..."></div>
+    <div class="f"><label for="mNotes">Notes (optional)</label><textarea id="mNotes" style="min-height:70px"></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-main" id="mOk">Schedule</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit note -->
+<div class="sheet-bg" id="sheetNote">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>Edit note</h3>
+    <div class="f" style="margin-top:14px"><label for="neText">Note</label><textarea id="neText" maxlength="300"></textarea></div>
+    <div class="f"><label for="neCat">Category</label>
+      <select id="neCat">
+        <option value="general">General</option><option value="feedback">Feedback</option>
+        <option value="idea">Idea</option><option value="reference">Reference</option><option value="urgent">Urgent</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-main" id="neOk">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Support -->
+<div class="sheet-bg" id="sheetSupport">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3 id="supTitle">Contact admin</h3>
+    <p class="sub" id="supDesc">Let us know how we can help.</p>
+    <div class="f"><label for="supMsg">Message</label><textarea id="supMsg" style="min-height:120px" placeholder="Describe your request or problem…"></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-main" id="supOk">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notifications -->
+<div class="sheet-bg" id="sheetNotifs">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3>Notifications</h3>
+      <button class="link-btn" id="notifClear">Mark all read</button>
+    </div>
+    <div id="notifList" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- Profile -->
+<div class="sheet-bg" id="sheetProfile">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="profile-hd">
+      <div class="avatar" id="pAvatar">?</div>
+      <div>
+        <h3 id="pName">Client</h3>
+        <p class="muted small" id="pEmail"></p>
+      </div>
+    </div>
+    <div class="sec-mini"><span>Your designer</span></div>
+    <div id="pDesigner"></div>
+    <div class="sec-mini"><span>Admin contact</span></div>
+    <div class="info-list">
+      <div><small>Email</small><b><a href="mailto:admin@pixelroot.site">admin@pixelroot.site</a></b></div>
+      <div><small>Phone</small><b>+94 11 000 0000</b></div>
+      <div><small>Hours</small><b>Mon–Fri · 9am–6pm</b></div>
+    </div>
+    <div class="sec-mini"><span>Account security</span></div>
+    <div class="sheet-list">
+      <button class="btn btn-soft full" data-action="changeEmail">Change email</button>
+      <button class="btn btn-soft full" data-action="changePassword">Change password</button>
+    </div>
+    <div class="sheet-list">
+      <button class="btn btn-soft full" data-support="request">Request another designer</button>
+      <button class="btn btn-danger full" data-support="report">Report a problem</button>
+      <button class="btn btn-ghost full" data-action="logout">Sign out</button>
+    </div>
+  </div>
+</div>
+
+<!-- Contact admin (shown for Change email / Change password) -->
+<div class="sheet-bg" id="sheetAdminContact">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>Contact admin</h3>
+    <p class="sub">Please contact admin on <a href="mailto:admin@pixelroot.site"><b>admin@pixelroot.site</b></a> to change your email or reset your password.</p>
+    <div class="btn-row">
+      <button class="btn btn-main" data-close>Got it</button>
+    </div>
+  </div>
+</div>
+
+
+<noscript><p style="padding:40px;font-family:sans-serif">JavaScript is required to use PixelRoot.</p></noscript>
+<script type="module" src="assets/js/client-dashboard.js"></script>
+</body>
+</html>
