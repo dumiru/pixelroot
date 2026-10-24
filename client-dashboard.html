@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f2b5c">
+<title>Client Portal · PixelRoot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue-950: #061433;
+    --blue-900: #0a1a3a;
+    --blue-800: #0f2b5c;
+    --blue-600: #1e63d6;
+    --blue-500: #2f80ed;
+    --blue-400: #56a8ff;
+    --blue-200: #bcdcff;
+    --blue-50: #eef6ff;
+    --text: #1b2a4a;
+    --muted: #5b6b8c;
+    --border: #dbe7f8;
+    --ok: #12a366;
+    --warn: #d98200;
+    --bad: #d64545;
+    --grad: linear-gradient(135deg, #2f80ed 0%, #56a8ff 100%);
+    --grad-bar: linear-gradient(135deg, #0f2b5c 0%, #1e63d6 100%);
+    --shadow-sm: 0 1px 2px rgba(10,26,58,.04), 0 6px 16px rgba(30,99,214,.05);
+
+    /* Tighter corner system */
+    --r-xs: 3px;
+    --r-sm: 4px;
+    --r-md: 6px;
+    --r-lg: 8px;
+    --r-xl: 10px;
+    --sidebar-w: 248px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    background: #f5f8fd;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  button, input, select, textarea { font-family: inherit; font-size: 16px; color: inherit; }
+  button { cursor: pointer; border: 0; background: none; }
+  a { color: inherit; text-decoration: none; }
+  svg { flex-shrink: 0; }
+
+  /* ============ APP SHELL ============ */
+  .sidebar { display: none; }
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+    position: relative;
+  }
+
+  /* ---------- Header ---------- */
+  .top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: calc(14px + env(safe-area-inset-top)) 18px 6px;
+  }
+  .brand { font-weight: 800; font-size: 19px; letter-spacing: -.4px; color: var(--blue-900); }
+  .brand span { color: var(--blue-500); }
+  .top-actions { display: flex; align-items: center; gap: 8px; }
+  .icon-btn {
+    position: relative; width: 40px; height: 40px; border-radius: var(--r-md);
+    background: #fff; border: 1px solid var(--border); display: grid; place-items: center;
+    color: var(--blue-800); transition: background .15s, border-color .15s;
+  }
+  .icon-btn:hover { background: var(--blue-50); border-color: var(--blue-200); }
+  .icon-btn svg { width: 19px; height: 19px; }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%; background: var(--grad-bar);
+    color: #fff; font-weight: 700; font-size: 15px; display: grid; place-items: center;
+  }
+  .dot {
+    position: absolute; top: 7px; right: 8px; width: 8px; height: 8px; border-radius: 50%;
+    background: #ff5c5c; border: 2px solid #fff; display: none;
+  }
+  .dot.show { display: block; }
+
+  /* ---------- Views ---------- */
+  .view { display: none; padding: 0 18px; }
+  .view.on { display: block; animation: rise .3s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .page-head { margin: 10px 2px 16px; }
+  .eyebrow { font-size: 11px; letter-spacing: .9px; text-transform: uppercase; color: var(--blue-500); font-weight: 600; }
+  .page-head h1 { font-size: 24px; font-weight: 700; letter-spacing: -.4px; color: var(--blue-900); line-height: 1.2; margin-top: 2px; }
+  .page-head p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  .sec { display: flex; align-items: center; justify-content: space-between; margin: 24px 2px 10px; }
+  .sec h2 { font-size: 15px; font-weight: 700; color: var(--blue-900); }
+  .link { font-size: 13px; font-weight: 600; color: var(--blue-600); }
+  .link:hover { text-decoration: underline; }
+
+  .muted { color: var(--muted); }
+  .small { font-size: 12px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  /* ---------- Dashboard grid (Home) ---------- */
+  .dash { display: block; }
+  .dcol { min-width: 0; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    margin-top: 4px; border-radius: var(--r-xl); background: var(--grad-bar); color: #fff;
+    padding: 20px; position: relative; overflow: hidden;
+    box-shadow: 0 18px 36px -18px rgba(6,20,51,.5);
+  }
+  .hero::before {
+    content: ""; position: absolute; right: -70px; top: -80px; width: 220px; height: 220px;
+    border-radius: 50%; background: radial-gradient(circle, rgba(86,168,255,.35), transparent 70%);
+  }
+  .hero > * { position: relative; }
+  .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .hero .eyebrow { color: var(--blue-200); }
+  .amt { font-size: 30px; font-weight: 700; letter-spacing: -.6px; margin-top: 2px; white-space: nowrap; }
+  .pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .pill {
+    font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: var(--r-sm);
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); white-space: nowrap;
+  }
+  .ring { position: relative; width: 92px; height: 92px; flex-shrink: 0; }
+  .ring svg { width: 92px; height: 92px; }
+  .ring-fg { transition: stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1); }
+  .ring-c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+  .ring-c b { font-size: 24px; font-weight: 700; }
+  .ring-c small { font-size: 10px; color: var(--blue-200); margin-top: 3px; text-transform: uppercase; letter-spacing: .6px; }
+  .hero-foot { margin-top: 14px; font-size: 12px; color: var(--blue-200); }
+
+  /* ---------- Quick actions ---------- */
+  .quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .qa {
+    background: #fff; border: 1px solid var(--border); border-radius: var(--r-lg); padding: 12px 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 7px; box-shadow: var(--shadow-sm);
+    font-size: 12px; font-weight: 600; color: var(--blue-800); transition: border-color .15s, transform .15s;
+  }
+  .qa:hover { border-color: var(--blue-200); }
+  .qa .qi {
+    width: 36px; height: 36px; border-radius: var(--r-md); background: var(--blue-50);
+    display: grid; place-items: center; color: var(--blue-600);
+  }
+  .qa .qi svg { width: 18px; height: 18px; }
+  .qa.primary { background: var(--grad); color: #fff; border-color: transparent; }
+  .qa.primary .qi { background: rgba(255,255,255,.22); color: #fff; }
+
+  /* ---------- Cards ---------- */
+  .card {
+    background: #fff; border: 1px solid var(--border); border-radius: var(--r-xl);
+    padding: 16px; box-shadow: var(--shadow-sm);
+  }
+  .title { font-weight: 600; color: var(--blue-900); font-size: 15px; line-height: 1.35; }
+
+  .focus { position: relative; overflow: hidden; cursor: pointer; transition: border-color .15s; }
+  .focus:hover { border-color: var(--blue-200); }
+  .focus::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--grad); }
+  .focus-label { font-size: 11px; font-weight: 600; color: var(--blue-600); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 6px; }
+  .focus .title { font-size: 17px; }
+  .focus-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
+
+  .rail {
+    display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory;
+    margin: 0 -18px; padding: 2px 18px 6px; scrollbar-width: none;
+  }
+  .rail::-webkit-scrollbar { display: none; }
+  .mini {
+    flex: 0 0 196px; scroll-snap-align: start; text-align: left; background: #fff;
+    border: 1px solid var(--border); border-radius: var(--r-xl); padding: 14px; box-shadow: var(--shadow-sm);
+    transition: border-color .15s;
+  }
+  .mini:hover { border-color: var(--blue-200); }
+  .mini .title { font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 40px; }
+  .mini .meta { font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+
+  .person { display: flex; align-items: center; gap: 12px; }
+  .av {
+    width: 44px; height: 44px; border-radius: 50%; background: var(--grad); color: #fff;
+    display: grid; place-items: center; font-weight: 700; font-size: 16px; flex-shrink: 0;
+  }
+  .person b { display: block; color: var(--blue-900); font-size: 15px; }
+  .person small { color: var(--muted); font-size: 12px; word-break: break-all; }
+
+  /* ---------- Badges, progress, due ---------- */
+  .badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: var(--r-sm); white-space: nowrap; display: inline-block; }
+  .pending { background: #fff8e8; color: #a86500; }
+  .in_progress { background: #e8f0ff; color: var(--blue-600); }
+  .completed { background: #e0f7ec; color: #0b7a4b; }
+  .revision { background: #fdeaea; color: #b02a2a; }
+
+  .due { font-size: 11.5px; color: var(--muted); }
+  .due.soon { color: var(--warn); font-weight: 600; }
+  .due.late { color: var(--bad); font-weight: 600; }
+
+  .bar { height: 5px; background: #e7eefb; border-radius: var(--r-sm); overflow: hidden; margin-top: 12px; }
+  .bar i { display: block; height: 100%; background: var(--grad); border-radius: var(--r-sm); transition: width .5s; }
+  .bar.lg { height: 8px; margin: 14px 0 4px; }
+
+  /* ---------- Brief list ---------- */
+  .fchips { display: flex; gap: 6px; overflow-x: auto; margin: 0 -18px 14px; padding: 0 18px 2px; scrollbar-width: none; }
+  .fchips::-webkit-scrollbar { display: none; }
+  .fchip {
+    flex-shrink: 0; padding: 7px 12px; border-radius: var(--r-md); background: #fff;
+    border: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--muted);
+    transition: all .15s;
+  }
+  .fchip span { font-weight: 500; opacity: .8; margin-left: 4px; }
+  .fchip.on { background: var(--blue-800); color: #fff; border-color: var(--blue-800); }
+
+  .stack { display: grid; gap: 10px; }
+  .bc {
+    position: relative; background: #fff; border: 1px solid var(--border); border-radius: var(--r-xl);
+    padding: 16px 16px 14px 18px; box-shadow: var(--shadow-sm); text-align: left; width: 100%; overflow: hidden;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .bc:hover { border-color: var(--blue-200); box-shadow: 0 8px 20px -12px rgba(30,99,214,.25); }
+  .bc::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--blue-400); }
+  .bc[data-status="pending"]::before { background: var(--warn); }
+  .bc[data-status="in_progress"]::before { background: var(--blue-500); }
+  .bc[data-status="revision"]::before { background: var(--bad); }
+  .bc[data-status="completed"]::before { background: var(--ok); }
+  .bc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .bc-meta { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
+  .tag { font-size: 11px; color: var(--muted); background: var(--blue-50); padding: 2px 7px; border-radius: var(--r-sm); }
+  .bc-foot { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); margin-top: 10px; gap: 8px; }
+  .accepted { font-size: 10px; font-weight: 600; color: var(--blue-600); background: var(--blue-50); padding: 2px 6px; border-radius: var(--r-xs); margin-left: 6px; vertical-align: 2px; }
+
+  /* ---------- Meetings timeline ---------- */
+  .tl { display: flex; gap: 12px; margin-bottom: 10px; }
+  .tl-date {
+    flex: 0 0 52px; height: 58px; border-radius: var(--r-md); background: var(--blue-800); color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .tl-date b { font-size: 19px; line-height: 1; }
+  .tl-date small { font-size: 10px; text-transform: uppercase; letter-spacing: .6px; margin-top: 3px; color: var(--blue-200); font-weight: 600; }
+  .tl-card { flex: 1; min-width: 0; background: #fff; border: 1px solid var(--border); border-radius: var(--r-xl); padding: 13px 14px; box-shadow: var(--shadow-sm); }
+  .tl-title { font-weight: 600; color: var(--blue-900); }
+  .tl-actions { display: flex; gap: 6px; margin-top: 10px; }
+
+  /* ---------- Notes ---------- */
+  .notes-wrap { display: grid; gap: 16px; }
+  .composer { background: #fff; border: 1px solid var(--border); border-radius: var(--r-xl); padding: 14px; box-shadow: var(--shadow-sm); }
+  .composer textarea { min-height: 84px; border: 0; padding: 4px 2px; background: transparent; resize: none; outline: none; width: 100%; }
+  .composer textarea::placeholder { color: #9aa8c4; }
+  .composer-row { display: flex; gap: 6px; align-items: center; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 6px; flex-wrap: wrap; }
+  .composer-row select {
+    flex: 1; min-width: 0; padding: 7px 9px; border-radius: var(--r-md); border: 1px solid var(--border);
+    background: #fbfdff; font-size: 13px; outline: none;
+  }
+  .composer-row .btn { padding: 9px 14px; }
+
+  .note { background: #fff; border: 1px solid var(--border); border-radius: var(--r-xl); padding: 13px 14px; box-shadow: var(--shadow-sm); margin-bottom: 8px; }
+  .note p { font-size: 14px; color: var(--text); white-space: pre-wrap; word-break: break-word; margin: 7px 0; }
+  .note-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); }
+  .cat { font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: var(--r-xs); background: #eef2f8; color: var(--muted); }
+  .cat.general { background: #eef2f8; color: #53627e; }
+  .cat.feedback { background: #fff4dc; color: #a86500; }
+  .cat.idea { background: #e8f0ff; color: var(--blue-600); }
+  .cat.reference { background: #f3e8ff; color: #7c3aed; }
+  .cat.urgent { background: #fdeaea; color: #b02a2a; }
+  .mine-tag { background: #e0f7ec; color: #0b7a4b; font-weight: 600; padding: 2px 7px; border-radius: var(--r-xs); font-size: 10.5px; }
+  .note-acts { display: flex; gap: 6px; justify-content: flex-end; margin-top: 4px; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 11px 16px; border-radius: var(--r-md); font-weight: 600; font-size: 14px; white-space: nowrap;
+    text-decoration: none; transition: filter .15s, background .15s, border-color .15s;
+  }
+  .btn:hover { filter: brightness(.97); }
+  .btn.full { width: 100%; }
+  .btn.sm { padding: 6px 11px; font-size: 12.5px; border-radius: var(--r-sm); }
+  .btn-main { background: var(--grad); color: #fff; box-shadow: 0 8px 16px -8px rgba(30,99,214,.6); }
+  .btn-soft { background: var(--blue-50); color: var(--blue-800); }
+  .btn-ghost { background: #fff; color: var(--blue-800); border: 1px solid var(--border); }
+  .btn-danger { background: #fdeaea; color: #b02a2a; }
+  .btn:disabled { opacity: .6; }
+  .btn-row { display: flex; gap: 8px; margin-top: 6px; }
+  .btn-row .btn { flex: 1; }
+
+  .empty {
+    text-align: center; padding: 26px 18px; color: var(--muted); background: #fff;
+    border: 1px dashed #c3d4ee; border-radius: var(--r-xl);
+  }
+  .empty b { display: block; color: var(--blue-900); font-size: 15px; margin-bottom: 4px; }
+  .empty .btn { margin-top: 12px; }
+  .empty-ico {
+    width: 46px; height: 46px; border-radius: var(--r-md); background: var(--blue-50); color: var(--blue-600);
+    display: grid; place-items: center; margin: 0 auto 10px;
+  }
+  .empty-ico svg { width: 22px; height: 22px; }
+
+  /* ---------- Mobile bottom nav ---------- */
+  .nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px; z-index: 50;
+    display: grid; grid-template-columns: 1fr 1fr 74px 1fr 1fr; align-items: end;
+    padding: 6px 6px calc(8px + env(safe-area-inset-bottom));
+    background: rgba(255,255,255,.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+  }
+  .nav .nav-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0;
+    font-size: 10.5px; font-weight: 500; color: #8492ad;
+  }
+  .nav .nav-btn svg { width: 21px; height: 21px; }
+  .nav .nav-btn.on { color: var(--blue-600); font-weight: 600; }
+  .fab-wrap { display: flex; justify-content: center; position: relative; top: -20px; }
+  .fab {
+    width: 56px; height: 56px; border-radius: 50%; background: var(--grad); color: #fff;
+    display: grid; place-items: center; border: 4px solid #f5f8fd;
+    box-shadow: 0 12px 22px -8px rgba(30,99,214,.6);
+  }
+  .fab svg { width: 22px; height: 22px; stroke-width: 2.6; }
+
+  /* ---------- Sheets (mobile bottom sheet / desktop dialog) ---------- */
+  .sheet-bg {
+    position: fixed; inset: 0; z-index: 200; background: rgba(6,20,51,.42);
+    display: flex; align-items: flex-end; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .sheet-bg.on { opacity: 1; pointer-events: auto; }
+  .sheet {
+    width: 100%; max-width: 480px; background: #fff; border-radius: var(--r-xl) var(--r-xl) 0 0;
+    padding: 10px 18px calc(20px + env(safe-area-inset-bottom));
+    max-height: 90dvh; overflow-y: auto; transform: translateY(104%);
+    transition: transform .3s cubic-bezier(.2,.8,.2,1);
+  }
+  .sheet-bg.on .sheet { transform: none; }
+  .grab { width: 38px; height: 4px; border-radius: var(--r-xs); background: #cfdaec; margin: 0 auto 14px; }
+  .sheet h3 { font-size: 18px; color: var(--blue-900); font-weight: 700; letter-spacing: -.3px; }
+  .sheet .sub { color: var(--muted); font-size: 13px; margin: 4px 0 16px; }
+  .sheet .sec-mini { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; color: var(--blue-600); margin: 16px 0 8px; display: flex; justify-content: space-between; }
+
+  .f { margin-bottom: 12px; }
+  .f label { display: block; font-size: 12px; font-weight: 600; color: var(--blue-800); margin-bottom: 5px; }
+  .f input, .f select, .f textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--r-md);
+    background: #fbfdff; outline: none; color: var(--text);
+  }
+  .f input:focus, .f select:focus, .f textarea:focus { border-color: var(--blue-500); box-shadow: 0 0 0 3px rgba(47,128,237,.12); }
+  .f textarea { min-height: 92px; resize: vertical; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chipopt {
+    padding: 7px 12px; border-radius: var(--r-md); border: 1px solid var(--border); background: #fbfdff;
+    font-size: 13px; font-weight: 500; color: var(--muted);
+  }
+  .chipopt.on { background: var(--blue-50); border-color: var(--blue-500); color: var(--blue-800); font-weight: 600; box-shadow: inset 0 0 0 1px var(--blue-500); }
+
+  .dgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+  .dgrid div { background: #f6f9ff; border: 1px solid var(--border); border-radius: var(--r-md); padding: 9px 11px; }
+  .dgrid small { display: block; font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; font-weight: 600; }
+  .dgrid b { font-size: 13.5px; color: var(--blue-900); font-weight: 600; }
+  .desc { font-size: 14px; color: var(--text); white-space: pre-wrap; word-break: break-word; background: #fbfdff; border: 1px solid var(--border); border-radius: var(--r-md); padding: 11px 13px; }
+  .ms { list-style: none; display: grid; gap: 6px; }
+  .ms li { display: flex; align-items: center; gap: 10px; font-size: 13.5px; padding: 9px 11px; border-radius: var(--r-md); background: #fbfdff; border: 1px solid var(--border); }
+  .ms .tick { width: 18px; height: 18px; border-radius: var(--r-xs); border: 1.5px solid #b9c9e6; display: grid; place-items: center; font-size: 11px; color: #fff; flex-shrink: 0; }
+  .ms li.done .tick { background: var(--ok); border-color: var(--ok); }
+  .ms li.done span:nth-child(2) { color: var(--muted); text-decoration: line-through; }
+  .ms em { margin-left: auto; font-style: normal; font-size: 11px; color: var(--muted); }
+  .detail-actions { display: grid; gap: 8px; margin-top: 18px; }
+
+  .notif { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .notif:last-child { border-bottom: 0; }
+  .notif .n-ico { width: 34px; height: 34px; border-radius: var(--r-md); background: var(--blue-50); color: var(--blue-600); display: grid; place-items: center; flex-shrink: 0; }
+  .notif .n-ico svg { width: 17px; height: 17px; }
+  .notif b { display: block; font-size: 14px; color: var(--blue-900); }
+  .notif small { color: var(--muted); font-size: 12px; display: block; }
+  .notif.unread .n-ico { background: var(--blue-600); color: #fff; }
+
+  .profile-hd { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+  .profile-hd .avatar { width: 52px; height: 52px; font-size: 19px; }
+  .info-list { background: #f6f9ff; border: 1px solid var(--border); border-radius: var(--r-xl); overflow: hidden; margin-top: 12px; }
+  .info-list div { display: flex; justify-content: space-between; gap: 10px; padding: 11px 13px; font-size: 13px; border-bottom: 1px solid var(--border); }
+  .info-list div:last-child { border-bottom: 0; }
+  .info-list small { color: var(--muted); }
+  .info-list b { color: var(--blue-900); font-weight: 600; text-align: right; word-break: break-all; }
+  .sheet-list { display: grid; gap: 8px; margin-top: 14px; }
+  .link-btn { color: var(--blue-600); font-weight: 600; font-size: 13px; }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed; top: calc(14px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
+    z-index: 300; background: var(--blue-950); color: #fff; font-size: 13px; font-weight: 500;
+    padding: 10px 16px; border-radius: var(--r-md); box-shadow: 0 14px 26px -10px rgba(6,20,51,.5);
+    max-width: calc(100vw - 32px); text-align: center; animation: toastIn .25s ease;
+  }
+  .toast.err { background: #b02a2a; }
+  @keyframes toastIn { from { opacity: 0; transform: translate(-50%, -6px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+  /* =====================================================================
+     DESKTOP (>= 1024px): sidebar shell, multi-column layouts, dialogs
+     ===================================================================== */
+  @media (min-width: 1024px) {
+    body { background: #f3f6fc; }
+    .sidebar {
+      display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-w); background: #fff; border-right: 1px solid var(--border);
+      padding: 22px 14px; z-index: 60;
+    }
+    .sidebar .brand { font-size: 21px; padding: 0 10px; margin-bottom: 26px; }
+    .side-label { font-size: 10.5px; font-weight: 600; letter-spacing: .9px; text-transform: uppercase; color: #8492ad; padding: 0 10px; margin-bottom: 6px; }
+    .side-nav { display: grid; gap: 2px; }
+    .side-nav .nav-btn {
+      display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: var(--r-md);
+      font-size: 14px; font-weight: 500; color: var(--muted); text-align: left; width: 100%;
+      transition: background .15s, color .15s;
+    }
+    .side-nav .nav-btn svg { width: 18px; height: 18px; }
+    .side-nav .nav-btn:hover { background: var(--blue-50); color: var(--blue-800); }
+    .side-nav .nav-btn.on { background: var(--blue-50); color: var(--blue-700, #1e63d6); font-weight: 600; box-shadow: inset 2px 0 0 var(--blue-600); }
+    .side-new { margin-top: 18px; }
+    .side-foot { margin-top: auto; padding: 14px 10px 0; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; cursor: pointer; border-radius: var(--r-md); }
+    .side-foot:hover { background: #f6f9ff; }
+    .side-foot .meta b { display: block; font-size: 13.5px; color: var(--blue-900); }
+    .side-foot .meta small { font-size: 11.5px; color: var(--muted); }
+
+    .nav { display: none; }
+    .fab-wrap { display: none; }
+
+    .app {
+      max-width: none; margin: 0 0 0 var(--sidebar-w); padding-bottom: 60px; min-height: 100vh;
+    }
+    .top { padding: 16px 40px; background: rgba(243,246,252,.85); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 40; }
+    .top .brand { display: none; }
+    .top-actions { margin-left: auto; }
+    .top .icon-btn { width: 40px; height: 40px; }
+
+    .view { padding: 0 40px; max-width: 1240px; }
+    .page-head { margin: 4px 0 22px; }
+    .page-head h1 { font-size: 28px; }
+    .page-head p { font-size: 14px; }
+
+    .dash { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+    .dcol.side { position: sticky; top: 80px; }
+    .dcol .sec:first-child { margin-top: 0; }
+    .hero { padding: 26px 28px; }
+    .amt { font-size: 36px; }
+    .ring, .ring svg { width: 104px; height: 104px; }
+    .quick { grid-template-columns: repeat(3, 170px); }
+    .qa { flex-direction: row; justify-content: flex-start; padding: 12px 14px; font-size: 13.5px; }
+    .qa .qi { width: 38px; height: 38px; }
+
+    .rail { margin: 0; padding: 2px 0 6px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); overflow: visible; }
+    .mini { flex: none; }
+
+    .stack { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .fchips { margin: 0 0 18px; padding: 0; overflow: visible; flex-wrap: wrap; }
+    .fchip { font-size: 13.5px; padding: 8px 14px; }
+
+    #meetList { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+    #meetList .tl { margin: 0; }
+
+    .notes-wrap { grid-template-columns: 360px minmax(0, 1fr); align-items: start; gap: 24px; }
+    .composer-col { position: sticky; top: 80px; }
+    #noteList { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+    #noteList .note { margin: 0; }
+
+    /* Dialogs centered on desktop */
+    .sheet-bg { align-items: center; }
+    .sheet {
+      max-width: 540px; border-radius: var(--r-xl); padding: 22px 24px 22px;
+      transform: translateY(10px) scale(.98); opacity: 0; transition: transform .22s ease, opacity .22s ease;
+    }
+    .sheet-bg.on .sheet { transform: none; opacity: 1; }
+    .grab { display: none; }
+    .sheet .btn-row { justify-content: flex-end; }
+    .sheet .btn-row .btn { flex: 0 0 auto; min-width: 110px; }
+  }
+
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    .dash { grid-template-columns: minmax(0, 1fr) 300px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Desktop sidebar -->
+<aside class="sidebar" aria-label="Sidebar">
+  <div class="brand">Pixel<span>Root</span></div>
+  <div class="side-label">Workspace</div>
+  <nav class="side-nav">
+    <button class="nav-btn on" data-go="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
+      Overview
+    </button>
+    <button class="nav-btn" data-go="briefs">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Briefs
+    </button>
+    <button class="nav-btn" data-go="meet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Meetings
+    </button>
+    <button class="nav-btn" data-go="notes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Notes
+    </button>
+  </nav>
+  <div class="side-new">
+    <button class="btn btn-main full" data-action="newBrief">+ New brief</button>
+  </div>
+  <div class="side-foot" data-action="profile" role="button" tabindex="0">
+    <div class="avatar" id="sideAvatar" style="width:36px;height:36px;font-size:14px">?</div>
+    <div class="meta"><b id="sideName">Client</b><small>View profile</small></div>
+  </div>
+</aside>
+
+<div class="app">
+
+  <header class="top">
+    <div class="brand">Pixel<span>Root</span></div>
+    <div class="top-actions">
+      <button class="icon-btn" data-action="notifs" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <i class="dot" id="notifDot"></i>
+      </button>
+      <button class="avatar" data-action="profile" id="avatarBtn" aria-label="Account">?</button>
+    </div>
+  </header>
+
+  <!-- ============ HOME ============ -->
+  <section class="view on" id="v-home">
+    <div class="page-head">
+      <div class="eyebrow">Client portal</div>
+      <h1 id="hHello">Hi there</h1>
+      <p id="hSummary">Loading your projects…</p>
+    </div>
+
+    <div class="dash">
+      <div class="dcol">
+        <div class="hero">
+          <div class="hero-top">
+            <div>
+              <div class="eyebrow">Balance</div>
+              <div class="amt" id="hBal">LKR 0</div>
+              <div class="pills">
+                <span class="pill" id="hDate"></span>
+                <span class="pill" id="hResetIn"></span>
+              </div>
+            </div>
+            <div class="ring" aria-label="Briefs used this cycle">
+              <svg viewBox="0 0 92 92">
+                <circle cx="46" cy="46" r="38" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="8"/>
+                <circle class="ring-fg" id="ringFg" cx="46" cy="46" r="38" fill="none" stroke="#bcdcff" stroke-width="8"
+                  stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="238.76" transform="rotate(-90 46 46)"/>
+              </svg>
+              <div class="ring-c"><b id="ringNum">0</b><small>left</small></div>
+            </div>
+          </div>
+          <div class="hero-foot" id="hUsed">0 of 10 briefs used this cycle</div>
+        </div>
+
+        <div class="quick">
+          <button class="qa primary" data-action="newBrief">
+            <span class="qi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+            New brief
+          </button>
+          <button class="qa" data-action="newMeeting">
+            <span class="qi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+            Schedule
+          </button>
+          <button class="qa" data-go="notes">
+            <span class="qi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+            Add note
+          </button>
+        </div>
+
+        <div class="sec"><h2>Up next</h2><button class="link" data-go="briefs">All briefs</button></div>
+        <div id="focus"></div>
+
+        <div class="sec"><h2>Active briefs</h2></div>
+        <div class="rail" id="rail"></div>
+
+        <div class="sec"><h2>Latest notes</h2><button class="link" data-go="notes">View all</button></div>
+        <div id="notesHome"></div>
+      </div>
+
+      <aside class="dcol side">
+        <div class="sec" style="margin-top:0"><h2>Next meeting</h2><button class="link" data-go="meet">Calendar</button></div>
+        <div id="nextMeet"></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ BRIEFS ============ -->
+  <section class="view" id="v-briefs">
+    <div class="page-head">
+      <div class="eyebrow">Your projects</div>
+      <h1>Briefs</h1>
+      <p id="briefsSub"></p>
+    </div>
+    <div class="fchips" id="fchips">
+      <button class="fchip on" data-filter="all">All<span data-count="all"></span></button>
+      <button class="fchip" data-filter="active">Active<span data-count="active"></span></button>
+      <button class="fchip" data-filter="revision">Revision<span data-count="revision"></span></button>
+      <button class="fchip" data-filter="done">Done<span data-count="done"></span></button>
+    </div>
+    <div class="stack" id="briefList"></div>
+  </section>
+
+  <!-- ============ MEETINGS ============ -->
+  <section class="view" id="v-meet">
+    <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
+      <div>
+        <div class="eyebrow">Collaboration</div>
+        <h1>Meetings</h1>
+        <p id="meetSub"></p>
+      </div>
+      <button class="btn btn-main" data-action="newMeeting">Schedule a meeting</button>
+    </div>
+    <div id="meetList"></div>
+  </section>
+
+  <!-- ============ NOTES ============ -->
+  <section class="view" id="v-notes">
+    <div class="page-head">
+      <div class="eyebrow">Shared workspace</div>
+      <h1>Notes</h1>
+      <p>Ideas, feedback and references for your designer.</p>
+    </div>
+    <div class="notes-wrap">
+      <div class="composer-col">
+        <div class="composer">
+          <textarea id="nText" maxlength="300" placeholder="Write a note, idea or feedback…"></textarea>
+          <div class="composer-row">
+            <select id="nCat" aria-label="Category">
+              <option value="general">General</option>
+              <option value="feedback">Feedback</option>
+              <option value="idea">Idea</option>
+              <option value="reference">Reference</option>
+              <option value="urgent">Urgent</option>
+            </select>
+            <select id="nBrief" aria-label="Related brief"><option value="">No brief</option></select>
+            <button class="btn btn-main" id="nAdd">Post</button>
+          </div>
+        </div>
+      </div>
+      <div class="notes-col">
+        <div class="sec" style="margin-top:0"><h2>Timeline</h2></div>
+        <div id="noteList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MOBILE BOTTOM NAV ============ -->
+  <nav class="nav" aria-label="Main">
+    <button class="nav-btn on" data-go="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
+      Home
+    </button>
+    <button class="nav-btn" data-go="briefs">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Briefs
+    </button>
+    <div class="fab-wrap">
+      <button class="fab" data-action="newBrief" aria-label="New brief">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <button class="nav-btn" data-go="meet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Meetings
+    </button>
+    <button class="nav-btn" data-go="notes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Notes
+    </button>
+  </nav>
+</div>
+
+<!-- ============ SHEETS / DIALOGS ============ -->
+
+<!-- New / edit brief -->
+<div class="sheet-bg" id="sheetBrief">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3 id="bTitle">New brief</h3>
+    <p class="sub" id="bSub">Tell us what you need designed.</p>
+    <div class="f"><label for="bName">Title</label><input id="bName" maxlength="100" placeholder="e.g. Black Friday sale post"></div>
+    <div class="f"><label>Platform</label><div class="chips" id="pChips"></div></div>
+    <div class="f"><label>Format</label><div class="chips" id="fmtChips"></div></div>
+    <div class="f"><label for="bDesc">Description</label><textarea id="bDesc" placeholder="Message, style, copy and any references."></textarea></div>
+    <div class="f"><label for="bDeadline">Target deadline</label><input id="bDeadline" type="date"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-main" id="bSave">Submit brief</button>
+    </div>
+  </div>
+</div>
+
+<!-- Brief detail -->
+<div class="sheet-bg" id="sheetDetail">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <h3 id="dTitle" style="font-size:18px;line-height:1.3">Brief</h3>
+      <span id="dStatus"></span>
+    </div>
+    <div id="dBody" style="margin-top:12px"></div>
+    <div class="detail-actions" id="dActions"></div>
+    <button class="btn btn-ghost full" data-close style="margin-top:8px">Close</button>
+  </div>
+</div>
+
+<!-- Revision -->
+<div class="sheet-bg" id="sheetRev">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>Request a revision</h3>
+    <p class="sub" id="revRemain">Let your designer know what needs to change.</p>
+    <div class="f"><label for="revNote">Revision note</label><textarea id="revNote" placeholder="e.g. Make the headline navy and the logo larger."></textarea></div>
+    <div class="f"><label for="revExtra">Additional notes (optional)</label><textarea id="revExtra" style="min-height:70px" placeholder="Extra context, references or deadlines."></textarea></div>
+    <div class="f"><label for="revFb">Overall feedback (optional)</label><textarea id="revFb" style="min-height:70px" placeholder="Your thoughts on the work so far."></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-main" id="revOk">Send revision</button>
+    </div>
+  </div>
+</div>
+
+<!-- Meeting -->
+<div class="sheet-bg" id="sheetMeet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>Schedule a meeting</h3>
+    <p class="sub" id="mWith">With your assigned designer</p>
+    <div class="f"><label for="mTitleIn">Title</label><input id="mTitleIn" maxlength="80" placeholder="e.g. Monthly planning call"></div>
+    <div class="f"><label for="mWhen">Date &amp; time</label><input id="mWhen" type="datetime-local"></div>
+    <div class="f"><label for="mLink">Meeting link (optional)</label><input id="mLink" type="url" placeholder="https://meet.google.com/..."></div>
+    <div class="f"><label for="mNotes">Notes (optional)</label><textarea id="mNotes" style="min-height:70px"></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-main" id="mOk">Schedule</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit note -->
+<div class="sheet-bg" id="sheetNote">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>Edit note</h3>
+    <div class="f" style="margin-top:14px"><label for="neText">Note</label><textarea id="neText" maxlength="300"></textarea></div>
+    <div class="f"><label for="neCat">Category</label>
+      <select id="neCat">
+        <option value="general">General</option><option value="feedback">Feedback</option>
+        <option value="idea">Idea</option><option value="reference">Reference</option><option value="urgent">Urgent</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-main" id="neOk">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Support -->
+<div class="sheet-bg" id="sheetSupport">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3 id="supTitle">Contact admin</h3>
+    <p class="sub" id="supDesc">Let us know how we can help.</p>
+    <div class="f"><label for="supMsg">Message</label><textarea id="supMsg" style="min-height:120px" placeholder="Describe your request or problem…"></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-main" id="supOk">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notifications -->
+<div class="sheet-bg" id="sheetNotifs">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3>Notifications</h3>
+      <button class="link-btn" id="notifClear">Mark all read</button>
+    </div>
+    <div id="notifList" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- Profile -->
+<div class="sheet-bg" id="sheetProfile">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="profile-hd">
+      <div class="avatar" id="pAvatar">?</div>
+      <div>
+        <h3 id="pName">Client</h3>
+        <p class="muted small" id="pEmail"></p>
+      </div>
+    </div>
+    <div class="sec-mini"><span>Your designer</span></div>
+    <div id="pDesigner"></div>
+    <div class="sec-mini"><span>Admin contact</span></div>
+    <div class="info-list">
+      <div><small>Email</small><b><a href="mailto:admin@pixelroot.lk">admin@pixelroot.lk</a></b></div>
+      <div><small>Phone</small><b>+94 11 234 5678</b></div>
+      <div><small>Hours</small><b>Mon–Fri · 9am–6pm</b></div>
+    </div>
+    <div class="sec-mini"><span>Account security</span></div>
+    <div class="sheet-list">
+      <button class="btn btn-soft full" data-action="changeEmail">Change email</button>
+      <button class="btn btn-soft full" data-action="changePassword">Change password</button>
+    </div>
+    <div class="sheet-list">
+      <button class="btn btn-soft full" data-support="request">Request another designer</button>
+      <button class="btn btn-danger full" data-support="report">Report a problem</button>
+      <button class="btn btn-ghost full" data-action="logout">Sign out</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change Email -->
+<div class="sheet-bg" id="sheetEmail">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>Change email</h3>
+    <p class="sub">We'll send a verification link to your new address.</p>
+    <div class="f"><label for="ceEmail">New email</label><input id="ceEmail" type="email" placeholder="you@example.com" autocomplete="email"></div>
+    <div class="f"><label for="cePass">Current password</label><input id="cePass" type="password" placeholder="Confirm with your password" autocomplete="current-password"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-main" id="ceOk">Update email</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change Password -->
+<div class="sheet-bg" id="sheetPass">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>Change password</h3>
+    <p class="sub">Choose a strong password with at least 8 characters.</p>
+    <div class="f"><label for="cpOld">Current password</label><input id="cpOld" type="password" autocomplete="current-password"></div>
+    <div class="f"><label for="cpNew">New password</label><input id="cpNew" type="password" autocomplete="new-password"></div>
+    <div class="f"><label for="cpConfirm">Confirm new password</label><input id="cpConfirm" type="password" autocomplete="new-password"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-main" id="cpOk">Update password</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut, updateEmail, updatePassword, sendEmailVerification, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAIQVEXNrIu3ZhhQ0qJKMZpOSKZ2EPD25E",
+    authDomain: "pixelroot-9da60.firebaseapp.com",
+    projectId: "pixelroot-9da60",
+    storageBucket: "pixelroot-9da60.firebasestorage.app",
+    messagingSenderId: "320500176338",
+    appId: "1:320500176338:web:033d785c5f716779eb240b",
+    measurementId: "G-WBE5F8ZKSF"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  /* ---------- Constants & helpers ---------- */
+  const DEFAULT_BRIEF_LIMIT = 10;
+  const DEFAULT_REVISIONS_PER_BRIEF = 2;
+  const RING_C = 238.76;
+  const DASH = { client: 'client-dashboard.html', designer: 'designer-dashboard.html', admin: 'admin-dashboard.html' };
+  const STATUS = { pending: 'Pending', in_progress: 'In Progress', completed: 'Completed', revision: 'Revision Requested' };
+  const CAT = { general: 'General', feedback: 'Feedback', idea: 'Idea', reference: 'Reference', urgent: 'Urgent' };
+  const PLATFORMS = ['Instagram', 'Facebook', 'LinkedIn', 'TikTok'];
+  const FORMATS = ['Square', 'Story', 'Carousel'];
+  const ERR = {
+    'auth/invalid-credential': 'Incorrect email or password.',
+    'auth/too-many-requests': 'Too many attempts. Please wait a moment and try again.',
+    'permission-denied': 'Permission denied. Check your Firestore security rules.',
+    'auth/requires-recent-login': 'Please sign in again before changing this.'
+  };
+
+  const $ = s => document.querySelector(s);
+  const $$ = s => document.querySelectorAll(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const safeHref = s => { const v = String(s ?? '').trim(); return /^https?:\/\//i.test(v) ? esc(v) : '#'; };
+  const badge = s => `<span class="badge ${esc(s)}">${esc(STATUS[s] || s)}</span>`;
+  const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+  const fmtDate = t => t?.toDate ? t.toDate().toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+  const shortDate = s => s ? new Date(s + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : '—';
+  const resetDateFmt = d => `${d.getDate()}, ${d.toLocaleString(undefined, { month: 'short' })}`;
+  const nowStr = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
+  const dayDiff = s => Math.round((new Date(s + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5);
+  const sortNew = l => l.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  const byDue = (a, b) => (a.deadline || '9').localeCompare(b.deadline || '9');
+  const pct = b => {
+    const m = b.milestones || [];
+    if (b.status === 'completed') return 100;
+    if (m.length) return Math.round(m.filter(x => x.done).length / m.length * 100);
+    if (b.status === 'in_progress' && b.workLink) return 75;
+    if (b.status === 'in_progress' || b.status === 'revision') return 50;
+    if (b.accepted) return 25;
+    return 0;
+  };
+  const dueInfo = (s, done) => {
+    if (!s) return { t: 'No deadline', c: '' };
+    if (done) return { t: shortDate(s), c: '' };
+    const d = dayDiff(s);
+    return { t: d < 0 ? plural(-d, 'day') + ' overdue' : d === 0 ? 'Due today' : plural(d, 'day') + ' left', c: d < 0 ? 'late' : d <= 3 ? 'soon' : '' };
+  };
+  const dueTag = (s, done) => { const d = dueInfo(s, done); return `<span class="due ${d.c}">${esc(d.t)}</span>`; };
+  const upMeet = l => l.filter(m => m.status === 'scheduled' && m.when >= nowStr()).sort((a, b) => a.when.localeCompare(b.when));
+  const revMaxOf = b => (b.revisionLimit != null ? b.revisionLimit : DEFAULT_REVISIONS_PER_BRIEF);
+  const BL = () => Number(p.briefLimit ?? DEFAULT_BRIEF_LIMIT);
+  const errMsg = e => ERR[e.code] || e.message || 'Something went wrong.';
+  const fail = e => toast(errMsg(e), true);
+
+  const ICON = {
+    file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+    cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+    user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>'
+  };
+
+  /* ---------- Feedback & sheets ---------- */
+  function toast(m, bad) {
+    const t = document.createElement('div');
+    t.className = 'toast' + (bad ? ' err' : '');
+    t.textContent = m;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3600);
+  }
+  async function busy(btn, fn) {
+    const label = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Please wait…';
+    try { await fn(); } catch (e) { fail(e); }
+    btn.disabled = false; btn.textContent = label;
+  }
+  const openSheet = id => $(id).classList.add('on');
+  const closeSheet = id => $(id).classList.remove('on');
+
+  /* ---------- State ---------- */
+  let u = null, p = {}, designer = null;
+  let briefs = [], meetings = [], notes = [], notifications = [];
+  let filter = 'all', editingBriefId = null, pendingRevId = null, editingNoteId = null, supportMode = 'request';
+  let fPlatform = 'Instagram', fFormat = 'Square';
+
+  function usedThisCycle() {
+    const resetAt = p.briefResetAt?.toDate ? p.briefResetAt.toDate() : null;
+    const now = new Date();
+    return briefs.filter(b => {
+      if (!b.createdAt) return false;
+      const d = b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt.seconds * 1000);
+      return (!resetAt || d >= new Date(resetAt.getTime() - 31 * 864e5)) && d <= (resetAt || now);
+    }).length;
+  }
+
+  /* ---------- Rendering ---------- */
+  function renderAll() {
+    renderHome();
+    renderBriefs();
+    renderMeetings();
+    renderNotes();
+    renderNotifDot();
+    renderProfile();
+    renderNoteBriefOptions();
+  }
+
+  function briefCard(b) {
+    const pc = pct(b), ms = b.milestones || [];
+    const msDone = ms.filter(m => m.done).length;
+    const foot = b.status === 'completed' ? `Completed ${fmtDate(b.completedAt)}`
+      : b.acceptedAt ? `Accepted ${fmtDate(b.acceptedAt)}` : 'Awaiting acceptance';
+    return `<div class="bc" data-status="${esc(b.status || 'pending')}" data-open="${b.id}">
+      <div class="bc-top">
+        <div class="title">${esc(b.title)}${b.accepted && b.status === 'pending' ? '<span class="accepted">Accepted</span>' : ''}</div>
+        ${badge(b.status || 'pending')}
+      </div>
+      <div class="bc-meta">
+        <span class="tag">${esc(b.platform)}</span>
+        <span class="tag">${esc(b.format)}</span>
+        ${ms.length ? `<span class="tag">${msDone}/${ms.length} milestones</span>` : ''}
+      </div>
+      <div class="bar"><i style="width:${pc}%"></i></div>
+      <div class="bc-foot"><span>${dueTag(b.deadline, b.status === 'completed')}</span><span>${pc}%</span></div>
+      <div class="bc-foot" style="margin-top:3px"><span>${esc(foot)}</span></div>
+    </div>`;
+  }
+
+  function miniCard(b) {
+    return `<button class="mini" data-open="${b.id}">
+      ${badge(b.status || 'pending')}
+      <div class="title" style="margin-top:10px">${esc(b.title)}</div>
+      <div class="bar" style="margin-top:12px"><i style="width:${pct(b)}%"></i></div>
+      <div class="meta">${dueTag(b.deadline)}</div>
+    </button>`;
+  }
+
+  function renderHome() {
+    const o = briefs.filter(b => b.status !== 'completed').sort(byDue);
+    const done = briefs.length - o.length;
+    const um = upMeet(meetings);
+
+    const first = (p.name || '').trim().split(' ')[0];
+    $('#hHello').textContent = first ? `Hi, ${first}` : 'Hi there';
+    $('#hSummary').textContent = briefs.length
+      ? `${plural(o.length, 'active brief')} · ${done} completed`
+      : 'No briefs yet. Submit your first request.';
+
+    const bal = Number(p.balanceLKR ?? 0);
+    $('#hBal').textContent = 'LKR ' + bal.toLocaleString();
+    const resetAt = p.briefResetAt?.toDate ? p.briefResetAt.toDate() : null;
+    $('#hDate').textContent = resetAt ? 'Resets ' + resetDateFmt(resetAt) : 'No reset date';
+    $('#hResetIn').textContent = (() => {
+      if (!resetAt) return '';
+      const days = Math.max(0, Math.ceil((resetAt - new Date()) / 864e5));
+      return days > 0 ? `${days} ${days === 1 ? 'day' : 'days'} left` : 'Due for reset';
+    })();
+
+    const limit = BL();
+    const used = usedThisCycle();
+    const remaining = Math.max(0, limit - used);
+    const usedPct = Math.min(100, Math.round(used / limit * 100));
+    $('#ringFg').style.strokeDashoffset = RING_C * (1 - usedPct / 100);
+    $('#ringFg').setAttribute('stroke', usedPct >= 100 ? '#ffb3b3' : '#bcdcff');
+    $('#ringNum').textContent = remaining;
+    $('#hUsed').textContent = `${used} of ${limit} briefs used this cycle`;
+
+    $('#focus').innerHTML = o[0]
+      ? `<div class="card focus" data-open="${o[0].id}">
+          <div class="focus-label">Most urgent</div>
+          <div class="title">${esc(o[0].title)}</div>
+          <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">${badge(o[0].status || 'pending')}${dueTag(o[0].deadline)}</div>
+          <div class="bar lg"><i style="width:${pct(o[0])}%"></i></div>
+          <div class="focus-foot"><span class="small muted">${pct(o[0])}% complete</span><span class="link">Open →</span></div>
+        </div>`
+      : emptyBox(ICON.file, 'Nothing urgent', 'Submit a brief and it will show up here.', '<button class="btn btn-main" data-action="newBrief">New brief</button>');
+
+    $('#rail').innerHTML = o.length
+      ? o.slice(0, 8).map(miniCard).join('')
+      : `<div class="muted small" style="padding:6px 2px">No active briefs right now.</div>`;
+
+    $('#nextMeet').innerHTML = um[0]
+      ? meetingRow(um[0], true)
+      : emptyBox(ICON.cal, 'No meetings booked', 'Schedule a call with your designer.');
+
+    $('#notesHome').innerHTML = notes.length
+      ? sortNew([...notes]).slice(0, 2).map(n => noteCard(n, true)).join('')
+      : emptyBox(ICON.note, 'No notes yet', 'Share an idea or feedback with your designer.');
+  }
+
+  function renderBriefs() {
+    const F = {
+      all: () => true,
+      active: b => ['pending', 'in_progress'].includes(b.status),
+      revision: b => b.status === 'revision',
+      done: b => b.status === 'completed'
+    };
+    const counts = { all: briefs.length, active: 0, revision: 0, done: 0 };
+    briefs.forEach(b => { if (F.active(b)) counts.active++; if (F.revision(b)) counts.revision++; if (F.done(b)) counts.done++; });
+    $$('[data-count]').forEach(s => s.textContent = counts[s.dataset.count]);
+    $$('.fchip').forEach(c => c.classList.toggle('on', c.dataset.filter === filter));
+    $('#briefsSub').textContent = briefs.length ? `${counts.active} active · ${counts.done} completed` : 'Your submitted briefs appear here.';
+
+    const list = sortNew([...briefs]).filter(F[filter]);
+    $('#briefList').innerHTML = list.length
+      ? list.map(briefCard).join('')
+      : emptyBox(ICON.file, filter === 'all' ? 'No briefs yet' : 'Nothing here', filter === 'all' ? 'Submit your first request to get started.' : 'Try a different filter.',
+          filter === 'all' ? '<button class="btn btn-main" data-action="newBrief">Submit a brief</button>' : '');
+  }
+
+  function meetingRow(m, compact) {
+    const d = new Date(m.when);
+    const canCancel = m.createdBy === u.uid;
+    return `<div class="tl">
+      <div class="tl-date"><b>${d.getDate()}</b><small>${d.toLocaleString(undefined, { month: 'short' })}</small></div>
+      <div class="tl-card">
+        <div class="tl-title">${esc(m.title)}</div>
+        <div class="muted small">${d.toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+        ${compact ? '' : `<div class="muted small">${esc(m.clientName)} with ${esc(m.designerName)}</div>`}
+        ${m.notes && !compact ? `<div class="small" style="margin-top:6px">${esc(m.notes)}</div>` : ''}
+        ${(m.link || canCancel) ? `<div class="tl-actions">
+          ${m.link ? `<a class="btn btn-soft sm" href="${safeHref(m.link)}" target="_blank" rel="noopener noreferrer">Join call</a>` : ''}
+          ${canCancel ? `<button class="btn btn-ghost sm" data-cancel="${m.id}">Cancel</button>` : ''}
+        </div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  function renderMeetings() {
+    const um = upMeet(meetings);
+    $('#meetSub').textContent = um.length ? plural(um.length, 'upcoming meeting') : 'Plan your next call with your designer.';
+    $('#meetList').innerHTML = um.length
+      ? um.map(m => meetingRow(m, false)).join('')
+      : emptyBox(ICON.cal, 'No upcoming meetings', 'Book a call to plan your next brief.');
+  }
+
+  function noteCard(n, compact) {
+    const mine = n.authorId === u.uid;
+    const when = n.createdAt?.toDate ? n.createdAt.toDate().toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : '';
+    return `<div class="note">
+      <div class="note-top">
+        <span class="cat ${esc(n.category || 'general')}">${esc(CAT[n.category] || 'General')}</span>
+        ${mine ? '<span class="mine-tag">You</span>' : `<span>${esc(n.authorName || 'Team')}</span>`}
+        <span>· ${when}</span>
+        ${n.briefTitle ? `<span>· ${esc(n.briefTitle)}</span>` : ''}
+      </div>
+      <p>${esc(compact && n.text.length > 120 ? n.text.slice(0, 120) + '…' : n.text)}</p>
+      ${mine && !compact ? `<div class="note-acts">
+        <button class="btn btn-ghost sm" data-note-edit="${n.id}">Edit</button>
+        <button class="btn btn-danger sm" data-note-del="${n.id}">Delete</button>
+      </div>` : ''}
+    </div>`;
+  }
+
+  function renderNotes() {
+    $('#noteList').innerHTML = notes.length
+      ? sortNew([...notes]).map(n => noteCard(n, false)).join('')
+      : emptyBox(ICON.note, 'No notes yet', 'Use the box to share your first note.');
+  }
+
+  function renderNoteBriefOptions() {
+    const sel = $('#nBrief');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">No brief</option>' + briefs.map(b => `<option value="${b.id}|${esc(b.title)}">${esc(b.title)}</option>`).join('');
+    if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
+  }
+
+  function renderNotifDot() {
+    const unread = notifications.filter(n => !n.read);
+    $('#notifDot').classList.toggle('show', unread.length > 0);
+    $('#notifList').innerHTML = notifications.length
+      ? notifications.slice(0, 30).map(n => `<div class="notif ${n.read ? '' : 'unread'}">
+          <span class="n-ico">${ICON.bell}</span>
+          <div><b>${esc(n.title)}</b><small>${esc(n.body || '')}</small>
+          <small>${n.createdAt?.toDate ? n.createdAt.toDate().toLocaleString() : ''}</small></div>
+        </div>`).join('')
+      : '<div class="empty" style="border:0">No notifications yet.</div>';
+  }
+
+  function renderProfile() {
+    const initial = (p.name || '?')[0].toUpperCase();
+    $('#pName').textContent = p.name || 'Client';
+    $('#sideName').textContent = p.name || 'Client';
+    $('#pEmail').textContent = u?.email || '';
+    $('#pAvatar').textContent = initial;
+    $('#avatarBtn').textContent = initial;
+    $('#sideAvatar').textContent = initial;
+    $('#pDesigner').innerHTML = designer
+      ? `<div class="person">${avatarOf(designer.name)}<div><b>${esc(designer.name)}</b><small>${esc(designer.email)}</small></div></div>`
+      : '<div class="muted small">Waiting for the admin to assign a designer.</div>';
+  }
+
+  function avatarOf(name) {
+    return `<span class="av">${esc((name || '?')[0].toUpperCase())}</span>`;
+  }
+
+  function emptyBox(icon, title, text, action = '') {
+    return `<div class="empty">
+      <div class="empty-ico">${icon}</div>
+      <b>${esc(title)}</b>${esc(text)}${action ? `<div>${action}</div>` : ''}
+    </div>`;
+  }
+
+  /* ---------- Navigation ---------- */
+  function go(name) {
+    $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + name));
+    $$('.nav-btn').forEach(b => b.classList.toggle('on', b.dataset.go === name));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ---------- Brief form ---------- */
+  function renderChips() {
+    $('#pChips').innerHTML = PLATFORMS.map(x => `<button type="button" class="chipopt ${x === fPlatform ? 'on' : ''}" data-pchip="${x}">${x}</button>`).join('');
+    $('#fmtChips').innerHTML = FORMATS.map(x => `<button type="button" class="chipopt ${x === fFormat ? 'on' : ''}" data-fchip="${x}">${x}</button>`).join('');
+  }
+
+  function openCreateBrief() {
+    editingBriefId = null;
+    $('#bTitle').textContent = 'New brief';
+    $('#bSub').textContent = 'Tell us what you need designed.';
+    $('#bName').value = ''; $('#bDesc').value = ''; $('#bDeadline').value = '';
+    $('#bDeadline').min = new Date().toISOString().slice(0, 10);
+    fPlatform = 'Instagram'; fFormat = 'Square';
+    renderChips();
+    $('#bSave').textContent = 'Submit brief';
+    openSheet('#sheetBrief');
+  }
+
+  function openEditBrief(id) {
+    const b = briefs.find(x => x.id === id);
+    if (!b) return;
+    if (b.accepted) return toast('This brief has been accepted and can no longer be edited.', true);
+    editingBriefId = id;
+    $('#bTitle').textContent = 'Edit brief';
+    $('#bSub').textContent = 'You can edit until your designer accepts the brief.';
+    $('#bName').value = b.title || '';
+    $('#bDesc').value = b.description || '';
+    $('#bDeadline').value = b.deadline || '';
+    fPlatform = b.platform || 'Instagram'; fFormat = b.format || 'Square';
+    renderChips();
+    $('#bSave').textContent = 'Save changes';
+    closeSheet('#sheetDetail');
+    openSheet('#sheetBrief');
+  }
+
+  function openBrief(id) {
+    const b = briefs.find(x => x.id === id);
+    if (!b) return;
+    const ms = b.milestones || [];
+    const revMax = revMaxOf(b), revUsed = b.revisionsUsed || 0;
+    const pc = pct(b);
+    $('#dTitle').textContent = b.title;
+    $('#dStatus').innerHTML = badge(b.status || 'pending');
+    $('#dBody').innerHTML = `
+      <div class="dgrid">
+        <div><small>Platform</small><b>${esc(b.platform)}</b></div>
+        <div><small>Format</small><b>${esc(b.format)}</b></div>
+        <div><small>Deadline</small><b>${esc(b.deadline || '—')}</b></div>
+        <div><small>Progress</small><b>${pc}%</b></div>
+      </div>
+      <div class="bar lg"><i style="width:${pc}%"></i></div>
+      ${ms.length ? `<div class="sec-mini"><span>Milestones</span><span>${ms.filter(m => m.done).length}/${ms.length}</span></div>
+        <ul class="ms">${ms.map(m => `<li class="${m.done ? 'done' : ''}"><span class="tick">${m.done ? '✓' : ''}</span><span>${esc(m.title)}</span><em>${esc(m.due || '')}</em></li>`).join('')}</ul>` : ''}
+      ${b.workLink ? `<a class="btn btn-soft full" style="margin-top:12px" href="${safeHref(b.workLink)}" target="_blank" rel="noopener noreferrer">View submitted work</a>` : ''}
+      <div class="sec-mini"><span>Description</span></div>
+      <div class="desc">${esc(b.description || 'No description provided.')}</div>
+      ${b.accepted ? `<p class="hint">${revUsed}/${revMax} revisions used${revUsed >= revMax ? ' · limit reached' : ''}</p>` : ''}
+      <p class="hint">${b.accepted
+        ? 'Accepted by your designer, so it can no longer be edited or deleted.'
+        : 'You can still edit or delete this brief until your designer accepts it.'}</p>`;
+
+    const acts = [];
+    if (b.status === 'completed' && revUsed < revMax) acts.push(`<button class="btn btn-main full" data-rev="${b.id}">Request revision</button>`);
+    if (!b.accepted) {
+      acts.push(`<button class="btn btn-soft full" data-edit="${b.id}">Edit brief</button>`);
+      acts.push(`<button class="btn btn-danger full" data-del="${b.id}">Delete brief</button>`);
+    }
+    $('#dActions').innerHTML = acts.join('');
+    openSheet('#sheetDetail');
+  }
+
+  /* ---------- Revisions ---------- */
+  function openRevision(id) {
+    const b = briefs.find(x => x.id === id);
+    if (!b) return;
+    const max = revMaxOf(b), used = b.revisionsUsed || 0;
+    if (used >= max) return toast('Revision limit reached for this brief.', true);
+    pendingRevId = id;
+    ['#revNote', '#revExtra', '#revFb'].forEach(s => $(s).value = '');
+    $('#revRemain').textContent = `${max - used} of ${max} revisions remaining for this brief.`;
+    closeSheet('#sheetDetail');
+    openSheet('#sheetRev');
+  }
+
+  /* ---------- Meetings ---------- */
+  function openMeeting() {
+    if (!designer) return toast('You need an assigned designer first.', true);
+    $('#mWith').textContent = `${p.name} with ${designer.name}`;
+    $('#mWhen').min = nowStr();
+    openSheet('#sheetMeet');
+  }
+
+  async function cancelMeeting(id) {
+    if (!confirm('Cancel this meeting?')) return;
+    try { await updateDoc(doc(db, 'meetings', id), { status: 'cancelled' }); toast('Meeting cancelled.'); }
+    catch (e) { fail(e); }
+  }
+
+  /* ---------- Notes ---------- */
+  function openNoteEdit(id) {
+    const n = notes.find(x => x.id === id);
+    if (!n) return;
+    if (n.authorId !== u.uid) return toast('You can only edit your own notes.', true);
+    editingNoteId = id;
+    $('#neText').value = n.text;
+    $('#neCat').value = n.category || 'general';
+    openSheet('#sheetNote');
+  }
+
+  /* ---------- Support ---------- */
+  function openSupport(mode) {
+    supportMode = mode;
+    $('#supTitle').textContent = mode === 'request' ? 'Request another designer' : 'Report a problem';
+    $('#supDesc').textContent = mode === 'request'
+      ? 'Tell the admin why you would like a different designer.'
+      : 'Describe the issue and the admin team will get back to you.';
+    $('#supMsg').value = '';
+    closeSheet('#sheetProfile');
+    openSheet('#sheetSupport');
+  }
+
+  /* ---------- Account security ---------- */
+  function openEmailSheet() {
+    $('#ceEmail').value = u.email || '';
+    $('#cePass').value = '';
+    closeSheet('#sheetProfile');
+    openSheet('#sheetEmail');
+  }
+
+  function openPasswordSheet() {
+    ['#cpOld', '#cpNew', '#cpConfirm'].forEach(s => $(s).value = '');
+    closeSheet('#sheetProfile');
+    openSheet('#sheetPass');
+  }
+
+  async function reauth(password) {
+    const cred = EmailAuthProvider.credential(u.email, password);
+    try {
+      await reauthenticateWithCredential(u, cred);
+      return true;
+    } catch (e) {
+      toast('Current password is incorrect.', true);
+      return false;
+    }
+  }
+
+  /* ---------- Click delegation ---------- */
+  document.addEventListener('click', async e => {
+    if (e.target.classList.contains('sheet-bg')) return e.target.classList.remove('on');
+    const el = e.target.closest('button, [data-open], [data-action], a[data-go]');
+    if (!el) return;
+    const d = el.dataset;
+
+    if (d.close !== undefined) return el.closest('.sheet-bg')?.classList.remove('on');
+    if (d.go) return go(d.go);
+    if (d.open) return openBrief(d.open);
+    if (d.filter) { filter = d.filter; renderBriefs(); return; }
+    if (d.pchip) { fPlatform = d.pchip; renderChips(); return; }
+    if (d.fchip) { fFormat = d.fchip; renderChips(); return; }
+    if (d.rev) return openRevision(d.rev);
+    if (d.edit) return openEditBrief(d.edit);
+    if (d.del) {
+      const b = briefs.find(x => x.id === d.del);
+      if (b?.accepted) return toast('This brief has been accepted and can no longer be deleted. Please contact the admin.', true);
+      if (!confirm('Delete this brief permanently? This cannot be undone.')) return;
+      try { await deleteDoc(doc(db, 'briefs', d.del)); closeSheet('#sheetDetail'); toast('Brief deleted.'); }
+      catch (err) { fail(err); }
+      return;
+    }
+    if (d.noteEdit) return openNoteEdit(d.noteEdit);
+    if (d.noteDel) {
+      const n = notes.find(x => x.id === d.noteDel);
+      if (!n) return;
+      if (n.authorId !== u.uid) return toast('You can only delete your own notes.', true);
+      if (!confirm('Delete this note?')) return;
+      try { await deleteDoc(doc(db, 'notes', d.noteDel)); toast('Note deleted.'); }
+      catch (err) { fail(err); }
+      return;
+    }
+    if (d.cancel) return cancelMeeting(d.cancel);
+    if (d.support) return openSupport(d.support);
+
+    switch (d.action) {
+      case 'newBrief': return openCreateBrief();
+      case 'newMeeting': return openMeeting();
+      case 'notifs': return openSheet('#sheetNotifs');
+      case 'profile': return openSheet('#sheetProfile');
+      case 'changeEmail': return openEmailSheet();
+      case 'changePassword': return openPasswordSheet();
+      case 'logout':
+        await signOut(auth);
+        return location.replace('signin.html');
+    }
+  });
+
+  /* ---------- Form submit handlers ---------- */
+  $('#bSave').onclick = () => busy($('#bSave'), async () => {
+    const title = $('#bName').value.trim();
+    const description = $('#bDesc').value.trim();
+    const deadline = $('#bDeadline').value;
+    if (!title || !description || !deadline) return toast('Please fill in the title, description and deadline.', true);
+    const wasEdit = !!editingBriefId;
+    if (wasEdit) {
+      const b = briefs.find(x => x.id === editingBriefId);
+      if (!b || b.accepted) return toast('This brief can no longer be edited.', true);
+      await updateDoc(doc(db, 'briefs', editingBriefId), { title, platform: fPlatform, format: fFormat, description, deadline });
+    } else {
+      if (usedThisCycle() >= BL()) return toast('You have reached your brief limit for this cycle.', true);
+      await addDoc(collection(db, 'briefs'), {
+        clientId: u.uid, clientName: p.name, clientEmail: p.email,
+        designerId: designer?.uid || null,
+        title, platform: fPlatform, format: fFormat, description, deadline,
+        status: 'pending', accepted: false, workLink: '', milestones: [],
+        revisionLimit: Number(p.revisionsPerBrief ?? DEFAULT_REVISIONS_PER_BRIEF),
+        revisionsUsed: 0,
+        createdAt: serverTimestamp()
+      });
+    }
+    editingBriefId = null;
+    closeSheet('#sheetBrief');
+    toast(wasEdit ? 'Brief updated.' : 'Brief submitted.');
+  });
+
+  $('#revOk').onclick = () => busy($('#revOk'), async () => {
+    const note = $('#revNote').value.trim();
+    if (!note) return toast('Please add a revision note.', true);
+    if (!pendingRevId) return;
+    const b = briefs.find(x => x.id === pendingRevId);
+    const max = b ? revMaxOf(b) : DEFAULT_REVISIONS_PER_BRIEF;
+    const used = b?.revisionsUsed || 0;
+    if (used >= max) return toast('Revision limit reached for this brief.', true);
+    await updateDoc(doc(db, 'briefs', pendingRevId), {
+      status: 'revision',
+      revisionNote: note,
+      revisionExtraNote: $('#revExtra').value.trim(),
+      revisionFeedback: $('#revFb').value.trim(),
+      revisionsUsed: used + 1
+    });
+    pendingRevId = null;
+    closeSheet('#sheetRev');
+    toast('Revision requested.');
+  });
+
+  $('#mOk').onclick = () => busy($('#mOk'), async () => {
+    const title = $('#mTitleIn').value.trim();
+    const when = $('#mWhen').value;
+    const link = $('#mLink').value.trim();
+    if (!designer || !title || !when) return toast('Add a title and a date/time.', true);
+    if (when < nowStr()) return toast('Choose a future date and time.', true);
+    if (link && !/^https?:\/\//i.test(link)) return toast('Meeting link must start with http(s)://', true);
+    await addDoc(collection(db, 'meetings'), {
+      clientId: u.uid, clientName: p.name,
+      designerId: designer.uid, designerName: designer.name,
+      title, when, link, notes: $('#mNotes').value.trim(),
+      status: 'scheduled', createdBy: u.uid, createdByRole: 'client', createdAt: serverTimestamp()
+    });
+    ['#mTitleIn', '#mWhen', '#mLink', '#mNotes'].forEach(s => $(s).value = '');
+    closeSheet('#sheetMeet');
+    toast('Meeting scheduled.');
+  });
+
+  $('#nAdd').onclick = () => busy($('#nAdd'), async () => {
+    const text = $('#nText').value.trim();
+    if (!text) return toast('Write something first.', true);
+    const [briefId, briefTitle] = $('#nBrief').value ? $('#nBrief').value.split('|') : ['', ''];
+    await addDoc(collection(db, 'notes'), {
+      clientId: u.uid, clientName: p.name,
+      designerId: designer?.uid || null,
+      authorId: u.uid, authorRole: 'client', authorName: p.name,
+      text, category: $('#nCat').value,
+      briefId: briefId || null, briefTitle: briefTitle || null,
+      createdAt: serverTimestamp()
+    });
+    $('#nText').value = ''; $('#nCat').value = 'general'; $('#nBrief').value = '';
+    toast('Note posted.');
+  });
+
+  $('#neOk').onclick = () => busy($('#neOk'), async () => {
+    const text = $('#neText').value.trim();
+    if (!text) return toast('Note cannot be empty.', true);
+    if (!editingNoteId) return;
+    await updateDoc(doc(db, 'notes', editingNoteId), { text, category: $('#neCat').value, editedAt: serverTimestamp() });
+    editingNoteId = null;
+    closeSheet('#sheetNote');
+    toast('Note updated.');
+  });
+
+  $('#supOk').onclick = () => busy($('#supOk'), async () => {
+    const msg = $('#supMsg').value.trim();
+    if (!msg) return toast('Write a message first.', true);
+    await addDoc(collection(db, 'supportRequests'), {
+      clientId: u.uid, clientName: p.name, clientEmail: p.email,
+      designerId: designer?.uid || null, designerName: designer?.name || '',
+      type: supportMode === 'request' ? 'request_designer' : 'report_problem',
+      message: msg, status: 'open', createdAt: serverTimestamp()
+    });
+    try {
+      await addDoc(collection(db, 'notifications'), {
+        userId: 'admin', role: 'admin',
+        title: supportMode === 'request' ? 'Designer request' : 'Problem report',
+        body: `${p.name}: ${msg.slice(0, 80)}`,
+        read: false, createdAt: serverTimestamp()
+      });
+    } catch (e) {}
+    closeSheet('#sheetSupport');
+    toast('Message sent to admin.');
+  });
+
+  $('#ceOk').onclick = () => busy($('#ceOk'), async () => {
+    const newEmail = $('#ceEmail').value.trim();
+    const pass = $('#cePass').value;
+    if (!newEmail || !pass) return toast('Enter your new email and current password.', true);
+    if (newEmail === u.email) return toast('That is already your current email.', true);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) return toast('Enter a valid email address.', true);
+    const ok = await reauth(pass);
+    if (!ok) return;
+    await updateEmail(u, newEmail);
+    await u.getIdToken(true); // refresh token so Firestore rules see the new email
+    // The new address is unverified until the user confirms it.
+    await updateDoc(doc(db, 'users', u.uid), { email: newEmail, emailVerified: false });
+    await sendEmailVerification(u).catch(() => {});
+    closeSheet('#sheetEmail');
+    $('#pEmail').textContent = newEmail;
+    toast('Email updated. A verification may be required.');
+  });
+
+  $('#cpOk').onclick = () => busy($('#cpOk'), async () => {
+    const oldPass = $('#cpOld').value;
+    const newPass = $('#cpNew').value;
+    const confirmPass = $('#cpConfirm').value;
+    if (!oldPass || !newPass || !confirmPass) return toast('Fill in all password fields.', true);
+    if (newPass.length < 8) return toast('New password must be at least 8 characters.', true);
+    if (newPass !== confirmPass) return toast('New passwords do not match.', true);
+    if (newPass === oldPass) return toast('New password must differ from the current one.', true);
+    const ok = await reauth(oldPass);
+    if (!ok) return;
+    await updatePassword(u, newPass);
+    closeSheet('#sheetPass');
+    toast('Password updated successfully.');
+  });
+
+  $('#notifClear').onclick = async () => {
+    const unread = notifications.filter(n => !n.read);
+    await Promise.all(unread.map(n => updateDoc(doc(db, 'notifications', n.id), { read: true }).catch(() => {})));
+  };
+
+  /* ---------- Auth guard & live data ---------- */
+  onAuthStateChanged(auth, async user => {
+    if (!user) return location.replace('signin.html');
+    if (!user.emailVerified) { await signOut(auth); return location.replace('signin.html'); }
+    u = user;
+    let data = null;
+    try { const s = await getDoc(doc(db, 'users', u.uid)); data = s.exists() ? s.data() : null; } catch (e) { fail(e); }
+    if (!data) { await signOut(auth); return location.replace('signin.html'); }
+    if (data.role !== 'client') return location.replace(DASH[data.role] || 'signin.html');
+    if (!data.emailVerified) updateDoc(doc(db, 'users', u.uid), { emailVerified: true }).catch(() => {});
+    p = data;
+    startListeners();
+  });
+
+  function startListeners() {
+    onSnapshot(doc(db, 'users', u.uid), async s => {
+      const data = s.data();
+      if (!data) return;
+      p = { ...p, ...data };
+      designer = null;
+      if (data.assignedDesignerId) {
+        try {
+          const ds = await getDoc(doc(db, 'users', data.assignedDesignerId));
+          if (ds.exists()) designer = { ...ds.data(), uid: ds.id };
+        } catch (e) {}
+      }
+      renderAll();
+    });
+
+    const q = c => query(collection(db, c), where('clientId', '==', u.uid));
+    onSnapshot(q('briefs'), s => { briefs = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }, fail);
+    onSnapshot(q('meetings'), s => { meetings = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }, fail);
+    onSnapshot(q('notes'), s => { notes = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }, fail);
+    onSnapshot(query(collection(db, 'notifications'), where('userId', '==', u.uid)), s => {
+      notifications = s.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      renderNotifDot();
+    }, () => {});
+  }
+
+  renderChips();
+</script>
+</body>
+</html>
